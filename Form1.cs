@@ -165,6 +165,7 @@ namespace Scrabble
             //bottom buttons
             for (int i = 0; i < 7; i++)
             {
+
                 Button button = new Button();
                 button.Top = 635;
                 button.Width = ButtonSize;
@@ -182,7 +183,27 @@ namespace Scrabble
                 
 
             }
+            Button btnSubmit = new Button();
+            btnSubmit.Top = 635;
+            btnSubmit.Width = 110;
+            btnSubmit.Height = 37;
+            btnSubmit.Left = 500;
+            btnSubmit.BackColor = Color.LightGreen;
+            btnSubmit.FlatStyle = FlatStyle.Flat;
+            btnSubmit.FlatAppearance.BorderSize = 0;
+            btnSubmit.Text ="Submit";
+            panel1.Controls.Add(btnSubmit);
 
+            Button btnReset = new Button();
+            btnReset.Top = 635;
+            btnReset.Width = 110;
+            btnReset.Height = 37;
+            btnReset.Left = 15;
+            btnReset.BackColor = Color.LightGreen;
+            btnReset.FlatStyle = FlatStyle.Flat;
+            btnReset.FlatAppearance.BorderSize = 0;
+            btnReset.Text = "Reset";
+            panel1.Controls.Add(btnReset);
 
         }
 
