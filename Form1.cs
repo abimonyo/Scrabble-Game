@@ -199,7 +199,7 @@ namespace Scrabble
             btnReset.Width = 110;
             btnReset.Height = 37;
             btnReset.Left = 15;
-            btnReset.BackColor = Color.LightGreen;
+            btnReset.BackColor = TWColor;
             btnReset.FlatStyle = FlatStyle.Flat;
             btnReset.FlatAppearance.BorderSize = 0;
             btnReset.Text = "Reset";
@@ -231,6 +231,8 @@ namespace Scrabble
             Button targetButton = (Button)sender;
             string buttonText = (string)e.Data.GetData(DataFormats.Text);
             targetButton.Text = buttonText;
+            targetButton.ForeColor = Color.Black;
+            targetButton.BackColor = TilesColor;
             RemoveButtonFromLayout(draggedButton);       
         }
         private void RemoveButtonFromLayout(Button button)
