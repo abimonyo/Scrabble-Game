@@ -40,7 +40,7 @@ namespace Scrabble
         }
 
        private void LoadGameUI()
-        {
+       {
            
             for (int row = 0; row < 15; row++)
             {
@@ -63,7 +63,8 @@ namespace Scrabble
                     board[row, col].AllowDrop = true;
                     board[row,col].DragEnter += TargetButton_DragEnter;
                     board[row,col].DragDrop += TargetButton_DragDrop;
-                    
+                    board[row, col].MouseDown += TargetButton_MouseDown;
+
 
                     // Code For Printing 'TW' on the board
 
@@ -176,8 +177,11 @@ namespace Scrabble
                 button.FlatAppearance.BorderSize = 0;
                 button.Text = i.ToString();
                 wordsLayout[0, i] = button;
+                wordsLayout[0, i].DragEnter += SourceButton_DragEnter;
+                wordsLayout[0, i].DragDrop += SourceButton_DragDrop;
                 wordsLayout[0 ,i].MouseDown += SourceButton_MouseDown;
-             
+                button.Font = new Font(button.Font, FontStyle.Bold);
+
 
                 panel1.Controls.Add(button);
                 
@@ -188,10 +192,13 @@ namespace Scrabble
             btnSubmit.Width = 110;
             btnSubmit.Height = 37;
             btnSubmit.Left = 500;
-            btnSubmit.BackColor = Color.LightGreen;
+            Color greenColor = ColorTranslator.FromHtml("#5aad5c");
+            btnSubmit.BackColor = greenColor;
+            btnSubmit.ForeColor = Color.White;
             btnSubmit.FlatStyle = FlatStyle.Flat;
             btnSubmit.FlatAppearance.BorderSize = 0;
             btnSubmit.Text ="Submit";
+            btnSubmit.Font = new Font(btnSubmit.Font, FontStyle.Bold);
             panel1.Controls.Add(btnSubmit);
 
             Button btnReset = new Button();
@@ -199,15 +206,109 @@ namespace Scrabble
             btnReset.Width = 110;
             btnReset.Height = 37;
             btnReset.Left = 15;
-            btnReset.BackColor = TWColor;
+            Color redColor = ColorTranslator.FromHtml("#e03d2b");
+            btnReset.BackColor = redColor;
             btnReset.FlatStyle = FlatStyle.Flat;
             btnReset.FlatAppearance.BorderSize = 0;
-            btnReset.Text = "Reset";
+            btnReset.Text = "↓↓";
+            btnReset.Font = new Font(btnReset.Font.FontFamily, 15, FontStyle.Regular);
+            btnReset.ForeColor = Color.White;
+            btnReset.Font = new Font(btnReset.Font, FontStyle.Bold);
             panel1.Controls.Add(btnReset);
 
+            // Panel For Player 1
+            Panel player1Panel = new Panel();
+            player1Panel.BorderStyle = BorderStyle.FixedSingle;
+            player1Panel.Left = 680;
+            player1Panel.Top = 40;
+            player1Panel.Width = 250;
+            player1Panel.Height = 100;
+            panel1.Controls.Add(player1Panel);
+
+            Label player1 = new Label();
+            player1.Text = "Abdullah";
+            player1.Font = new Font(btnReset.Font, FontStyle.Bold);
+            player1Panel.Controls.Add(player1);
+
+            Label player1Score = new Label();
+            player1Score.Text = "00";
+            player1Score.Top = 25;
+            player1Score.Font = new Font(btnReset.Font, FontStyle.Bold);
+            player1Panel.Controls.Add(player1Score);
+
+            PictureBox player1Image = new PictureBox();
+            player1Image.Dock = DockStyle.Right;
+            player1Image.Height = 80;
+            player1Image.Width = 100;
+            player1Image.SizeMode = PictureBoxSizeMode.StretchImage;
+            player1Image.Image = Image.FromFile("D:\\BSCS\\Semester 6\\Parallel Distributing Computing\\Labs\\Sir Umer\\Scrabbleproject\\player1.jpg");  // Replace "path_to_your_image.jpg" with the actual path to your image file
+            player1Panel.Controls.Add(player1Image);
+
+            // Panel For Player 2
+
+            Panel player2Panel = new Panel();
+            player2Panel.BorderStyle = BorderStyle.FixedSingle;
+            player2Panel.Left = 680;
+            player2Panel.Top = 220;
+            player2Panel.Width = 250;
+            player2Panel.Height = 100;
+            panel1.Controls.Add(player2Panel);
+
+
+
+
+            Label player2 = new Label();
+            player2.Text = "Usama";
+            player2.Font = new Font(btnReset.Font, FontStyle.Bold);
+            player2Panel.Controls.Add(player2);
+
+            Label player2Score = new Label();
+            player2Score.Text = "00";
+            player2Score.Top = 25;
+            player2Score.Font = new Font(btnReset.Font, FontStyle.Bold);
+            player2Panel.Controls.Add(player2Score);
+
+            PictureBox player2Image = new PictureBox();
+            player2Image.Dock = DockStyle.Right;
+            player2Image.Height = 80;
+            player2Image.Width = 100;
+            player2Image.SizeMode = PictureBoxSizeMode.StretchImage;
+            player2Image.Image = Image.FromFile("D:\\BSCS\\Semester 6\\Parallel Distributing Computing\\Labs\\Sir Umer\\Scrabbleproject\\player2.jpg");  // Replace "path_to_your_image.jpg" with the actual path to your image file
+            player2Panel.Controls.Add(player2Image);
+
+            player2Score.Text = "00";
+            player2Score.Top = 25;
+            player2Score.Font = new Font(btnReset.Font, FontStyle.Bold);
+            player2Panel.Controls.Add(player2Score);
         }
 
-       
+        private void SourceButton_DragDrop(object sender, DragEventArgs e)
+        {
+            Button targetButton = (Button)sender;
+            string buttonText = (string)e.Data.GetData(DataFormats.Text);
+            targetButton.Text = buttonText;
+            targetButton.ForeColor = Color.Black;
+            targetButton.BackColor = TilesColor;
+            draggedButton.Parent.Controls.Add(draggedButton);
+        }
+
+        private void SourceButton_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.Text))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+        }
+
+        private void TargetButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                draggedButton = (Button)sender;
+                isDragging = true;
+                draggedButton.DoDragDrop(draggedButton.Text, DragDropEffects.Copy);
+            }
+        }
 
         private void SourceButton_MouseDown(object sender, MouseEventArgs e)
         {
