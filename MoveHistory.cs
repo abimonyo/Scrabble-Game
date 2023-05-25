@@ -8,5 +8,9 @@ namespace Scrabble
 {
     internal class MoveHistory
     {
+        public int rowIndex { get; set; }
+        public int columnIndex { get; set; }
+        public String letter { get; set; }
+        public int weight { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,6 +14,12 @@ namespace Scrabble
 {
     public partial class Form1 : Form
     {
+        HashSet<string> dictionary = new HashSet<string>();
+
+        // Load the word list from the file
+        string[] lines = File.ReadAllLines("dictionary.txt");
+
+        List<MoveHistory> moveHistories = new List<MoveHistory>();
         private Button[,] board = new Button[15, 15];
         private Button[,] wordsLayout = new Button[1, 7];
         private const int ButtonSize = 37;
@@ -37,6 +44,10 @@ namespace Scrabble
             this.WindowState = FormWindowState.Minimized;
 
             LoadGameUI();
+            foreach (string word in lines)
+            {
+                dictionary.Add(word.ToLower()); // Store words in lowercase for case-insensitive matching
+            }
         }
 
        private void LoadGameUI()
@@ -63,7 +74,7 @@ namespace Scrabble
                     board[row, col].AllowDrop = true;
                     board[row,col].DragEnter += TargetButton_DragEnter;
                     board[row,col].DragDrop += TargetButton_DragDrop;
-                    board[row, col].MouseDown += TargetButton_MouseDown;
+                    //board[row, col].MouseDown += TargetButton_MouseDown;
 
 
                     // Code For Printing 'TW' on the board
@@ -176,9 +187,11 @@ namespace Scrabble
                 button.FlatStyle = FlatStyle.Flat;
                 button.FlatAppearance.BorderSize = 0;
                 button.Text = i.ToString();
+                button.Name = i.ToString();
                 wordsLayout[0, i] = button;
-                wordsLayout[0, i].DragEnter += SourceButton_DragEnter;
-                wordsLayout[0, i].DragDrop += SourceButton_DragDrop;
+                
+               /* wordsLayout[0, i].DragEnter += SourceButton_DragEnter;
+                wordsLayout[0, i].DragDrop += SourceButton_DragDrop;*/
                 wordsLayout[0 ,i].MouseDown += SourceButton_MouseDown;
                 button.Font = new Font(button.Font, FontStyle.Bold);
 
@@ -199,6 +212,8 @@ namespace Scrabble
             btnSubmit.FlatAppearance.BorderSize = 0;
             btnSubmit.Text ="Submit";
             btnSubmit.Font = new Font(btnSubmit.Font, FontStyle.Bold);
+            btnSubmit.Click += btnSubmit_Click;
+
             panel1.Controls.Add(btnSubmit);
 
             Button btnReset = new Button();
@@ -214,6 +229,7 @@ namespace Scrabble
             btnReset.Font = new Font(btnReset.Font.FontFamily, 15, FontStyle.Regular);
             btnReset.ForeColor = Color.White;
             btnReset.Font = new Font(btnReset.Font, FontStyle.Bold);
+            btnReset.Click += btnReset_Click;
             panel1.Controls.Add(btnReset);
 
             // Panel For Player 1
@@ -255,8 +271,6 @@ namespace Scrabble
             panel1.Controls.Add(player2Panel);
 
 
-
-
             Label player2 = new Label();
             player2.Text = "Usama";
             player2.Font = new Font(btnReset.Font, FontStyle.Bold);
@@ -282,39 +296,19 @@ namespace Scrabble
             player2Panel.Controls.Add(player2Score);
         }
 
-        private void SourceButton_DragDrop(object sender, DragEventArgs e)
-        {
-            Button targetButton = (Button)sender;
-            string buttonText = (string)e.Data.GetData(DataFormats.Text);
-            targetButton.Text = buttonText;
-            targetButton.ForeColor = Color.Black;
-            targetButton.BackColor = TilesColor;
-            draggedButton.Parent.Controls.Add(draggedButton);
-        }
-
-        private void SourceButton_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.Text))
-            {
-                e.Effect = DragDropEffects.Copy;
-            }
-        }
-
-        private void TargetButton_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                draggedButton = (Button)sender;
-                isDragging = true;
-                draggedButton.DoDragDrop(draggedButton.Text, DragDropEffects.Copy);
-            }
-        }
+       
 
         private void SourceButton_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
                 draggedButton = (Button)sender;
+                moveHistories.Add(new MoveHistory()
+                {
+                    rowIndex = 0,
+                    columnIndex = int.Parse(draggedButton.Name),
+                    letter = draggedButton.Text
+                });
                 isDragging = true;
                 draggedButton.DoDragDrop(draggedButton.Text, DragDropEffects.Copy);
             }
@@ -329,6 +323,7 @@ namespace Scrabble
 
         private void TargetButton_DragDrop(object sender, DragEventArgs e)
         {
+            
             Button targetButton = (Button)sender;
             string buttonText = (string)e.Data.GetData(DataFormats.Text);
             targetButton.Text = buttonText;
@@ -338,7 +333,27 @@ namespace Scrabble
         }
         private void RemoveButtonFromLayout(Button button)
         {
-            button.Parent.Controls.Remove(button);
+            wordsLayout[0, int.Parse(button.Name)].Hide();
+           
+        }
+        private void btnReset_Click(object sender,EventArgs args)
+        {
+            foreach(var move in moveHistories)
+            {
+                wordsLayout[0, move.columnIndex].Show();
+            }
+            board[7,7].Hide();
+
+
+
+        }
+        private void btnSubmit_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+        bool IsWordValid(string word)
+        {
+            return dictionary.Contains(word.ToLower());
         }
     }
   
