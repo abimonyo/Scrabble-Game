@@ -20,6 +20,7 @@ namespace Scrabble
         string[] lines = File.ReadAllLines("dictionary.txt");
 
         List<MoveHistory> moveHistories = new List<MoveHistory>();
+        List<BoardBackup> boardHistory = new List<BoardBackup>();
         private Button[,] board = new Button[15, 15];
         private Button[,] wordsLayout = new Button[1, 7];
         private const int ButtonSize = 37;
@@ -30,6 +31,7 @@ namespace Scrabble
         Color TWColor = ColorTranslator.FromHtml("#eb0551");
         Color TilesColor = ColorTranslator.FromHtml("#f0e054");
         private Button draggedButton; // Stores the button being dragged
+        private Button targetButton; // Stores the button being dragged
         private bool isDragging; // Indicates whether dragging is in progress
 
 
@@ -67,7 +69,7 @@ namespace Scrabble
                     button.ForeColor = Color.White;
                     button.Text = "";
                     button.Font = new Font(button.Font, FontStyle.Bold);
-                    button.Name = "Button_" + row + "_" + col;
+                    button.Name =row + "," + col;
                     panel1.Controls.Add(button);
                     button.BackColor = Color.LightGray;
                     board[row, col] = button;
@@ -317,32 +319,54 @@ namespace Scrabble
         {
             if (e.Data.GetDataPresent(DataFormats.Text))
             {
+                targetButton = (Button)sender;
+                
                 e.Effect = DragDropEffects.Copy;
             }
         }
 
         private void TargetButton_DragDrop(object sender, DragEventArgs e)
         {
-            
-            Button targetButton = (Button)sender;
+           
+            Button button = (Button)sender;
+            String[] splitted = targetButton.Name.Split(',');
+            boardHistory.Add(new BoardBackup()
+            {
+
+                row = int.Parse(splitted[0]),
+                col = int.Parse(splitted[1]),
+                text = targetButton.Text,
+                color = targetButton.BackColor
+            });
             string buttonText = (string)e.Data.GetData(DataFormats.Text);
-            targetButton.Text = buttonText;
-            targetButton.ForeColor = Color.Black;
-            targetButton.BackColor = TilesColor;
-            RemoveButtonFromLayout(draggedButton);       
+            button.Text = buttonText;
+            button.ForeColor = Color.Black;
+            button.BackColor = TilesColor;
+
+            RemoveButtonFromLayout(draggedButton); 
+            
         }
         private void RemoveButtonFromLayout(Button button)
         {
+            /*String[] splitted = button.Name.Split(',');
+            int col = int.Parse(splitted[1]);*/
             wordsLayout[0, int.Parse(button.Name)].Hide();
            
         }
         private void btnReset_Click(object sender,EventArgs args)
         {
-            foreach(var move in moveHistories)
+            foreach (var i in boardHistory)
+            {
+                board[i.row, i.col].Text = i.text;
+                board[i.row, i.col].BackColor = i.color;
+                board[i.row, i.col].ForeColor = Color.White;
+                board[i.row, i.col].Show();
+                
+            }
+            foreach (var move in moveHistories)
             {
                 wordsLayout[0, move.columnIndex].Show();
             }
-            board[7,7].Hide();
 
 
 
