@@ -21,8 +21,9 @@ namespace Scrabble
 
         List<MoveHistory> moveHistories = new List<MoveHistory>();
         List<BoardBackup> boardHistory = new List<BoardBackup>();
+        private List<char> userTiles= new List<char>();
         private Button[,] board = new Button[15, 15];
-        private Button[,] wordsLayout = new Button[1, 7];
+        private Button[,] userTilesBoard = new Button[1, 7];
         private const int ButtonSize = 37;
         private const int ButtonSpacing = 4;
         Color DLColor = ColorTranslator.FromHtml("#03befc");
@@ -50,9 +51,9 @@ namespace Scrabble
             {
                 dictionary.Add(word.ToLower()); // Store words in lowercase for case-insensitive matching
             }
-        }
+        }     
 
-       private void LoadGameUI()
+        private void LoadGameUI()
        {
            
             for (int row = 0; row < 15; row++)
@@ -176,9 +177,19 @@ namespace Scrabble
             board[7, 7].ForeColor = Color.White;
             board[7, 7].Font = new Font(board[7, 7].Font.FontFamily, 18, FontStyle.Regular);
 
-            //bottom buttons
+
+            char[] availableTiles = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M' };
+            Random random = new Random();
+
+            //UserTiles Board
             for (int i = 0; i < 7; i++)
             {
+                int index = random.Next(availableTiles.Length);
+                char tile = availableTiles[index];
+                userTiles.Add(tile);
+                availableTiles[index] = availableTiles[availableTiles.Length - 1];
+                Array.Resize(ref availableTiles, availableTiles.Length - 1);
+
 
                 Button button = new Button();
                 button.Top = 635;
@@ -188,19 +199,15 @@ namespace Scrabble
                 button.BackColor = TilesColor;
                 button.FlatStyle = FlatStyle.Flat;
                 button.FlatAppearance.BorderSize = 0;
-                button.Text = i.ToString();
+                button.Text = tile.ToString();
                 button.Name = i.ToString();
-                wordsLayout[0, i] = button;
-                
-               /* wordsLayout[0, i].DragEnter += SourceButton_DragEnter;
-                wordsLayout[0, i].DragDrop += SourceButton_DragDrop;*/
-                wordsLayout[0 ,i].MouseDown += SourceButton_MouseDown;
+                userTilesBoard[0, i] = button;
+
+                /*userTilesBoard[0, i].DragEnter += SourceButton_DragEnter;
+                userTilesBoard[0, i].DragDrop += SourceButton_DragDrop;*/
+                userTilesBoard[0 ,i].MouseDown += SourceButton_MouseDown;
                 button.Font = new Font(button.Font, FontStyle.Bold);
-
-
                 panel1.Controls.Add(button);
-                
-
             }
             Button btnSubmit = new Button();
             btnSubmit.Top = 635;
@@ -348,10 +355,7 @@ namespace Scrabble
         }
         private void RemoveButtonFromLayout(Button button)
         {
-            /*String[] splitted = button.Name.Split(',');
-            int col = int.Parse(splitted[1]);*/
-            wordsLayout[0, int.Parse(button.Name)].Hide();
-           
+            userTilesBoard[0, int.Parse(button.Name)].Hide();
         }
         private void btnReset_Click(object sender,EventArgs args)
         {
@@ -365,11 +369,8 @@ namespace Scrabble
             }
             foreach (var move in moveHistories)
             {
-                wordsLayout[0, move.columnIndex].Show();
+                userTilesBoard[0, move.columnIndex].Show();
             }
-
-
-
         }
         private void btnSubmit_Click(object sender, EventArgs e)
         {
