@@ -14,6 +14,8 @@ namespace Scrabble
 {
     public partial class Form1 : Form
     {
+        Label player2Score = new Label();
+
         HashSet<string> dictionary = new HashSet<string>();
 
         // Load the word list from the file
@@ -34,7 +36,13 @@ namespace Scrabble
         private Button draggedButton; // Stores the button being dragged
         private Button targetButton; // Stores the button being dragged
         private bool isDragging; // Indicates whether dragging is in progress
-
+        private Dictionary<char, int> letterPoints = new Dictionary<char, int>()
+        {
+            { 'A', 1 }, { 'B', 3 }, { 'C', 3 }, { 'D', 2 }, { 'E', 1 }, { 'F', 4 }, { 'G', 2 },
+            { 'H', 4 }, { 'I', 1 }, { 'J', 8 }, { 'K', 5 }, { 'L', 1 }, { 'M', 3 }, { 'N', 1 },
+            { 'O', 1 }, { 'P', 3 }, { 'Q', 10 }, { 'R', 1 }, { 'S', 1 }, { 'T', 1 }, { 'U', 1 },
+            { 'V', 4 }, { 'W', 4 }, { 'X', 8 }, { 'Y', 4 }, { 'Z', 10 }
+        };
 
         public Form1()
         {
@@ -221,7 +229,7 @@ namespace Scrabble
             btnSubmit.FlatAppearance.BorderSize = 0;
             btnSubmit.Text ="Submit";
             btnSubmit.Font = new Font(btnSubmit.Font, FontStyle.Bold);
-            btnSubmit.Click += btnSubmit_Click;
+            btnSubmit.Click += SubmitButton_Click;
 
             panel1.Controls.Add(btnSubmit);
 
@@ -285,7 +293,6 @@ namespace Scrabble
             player2.Font = new Font(btnReset.Font, FontStyle.Bold);
             player2Panel.Controls.Add(player2);
 
-            Label player2Score = new Label();
             player2Score.Text = "00";
             player2Score.Top = 25;
             player2Score.Font = new Font(btnReset.Font, FontStyle.Bold);
@@ -380,7 +387,53 @@ namespace Scrabble
         {
             return dictionary.Contains(word.ToLower());
         }
+
+        private string GetWordFromBoard()
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int row = 0; row < 15; row++)
+            {
+                for (int col = 0; col < 15; col++)
+                {
+                    if (!string.IsNullOrEmpty(board[row, col].Text))
+                    {
+                        if(board[row, col].Text!="DW"&& board[row, col].Text!="DL" && board[row, col].Text!="TL" && board[row, col].Text!="TW" && board[row, col].Text!= "★")
+                        sb.Append(board[row, col].Text);
+                    }
+                }
+            }
+            return sb.ToString();
+        }
+        private void SubmitButton_Click(object sender, EventArgs e)
+        {
+            string word = GetWordFromBoard();
+            int wordWeight = CalculateWordWeight(word);
+            if (IsWordValid(word))
+            {
+                MessageBox.Show("Valid word!");
+                player2Score.Text = wordWeight.ToString();
+
+
+            }
+            else
+            {
+                MessageBox.Show("Invalid word!");
+            }
+        }
+        private int CalculateWordWeight(string word)
+        {
+            int wordWeight = 0;
+
+            foreach (char letter in word)
+            {
+                int letterWeight = letterPoints[letter];
+                wordWeight += letterWeight;
+            }
+
+            return wordWeight;
+        }
     }
+
   
 
 }
