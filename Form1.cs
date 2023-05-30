@@ -79,6 +79,7 @@ namespace Scrabble
 
         private void AssignTurn()
         {
+            int hello;
             int turn =(int)formatter.Deserialize(stream);
             if(turn == 1)
             {
