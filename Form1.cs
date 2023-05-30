@@ -37,7 +37,8 @@ namespace Scrabble
         Color TilesColor = ColorTranslator.FromHtml("#f0e054");
         Button btnSubmit;
         private Button draggedButton; // Stores the button being dragged
-        private Button targetButton; 
+        private Button targetButton;
+        Panel player1Panel,player2Panel;
         private Dictionary<char, int> letterPoints = new Dictionary<char, int>()
         {
             { 'A', 1 }, { 'B', 3 }, { 'C', 3 }, { 'D', 2 }, { 'E', 1 }, { 'F', 4 }, { 'G', 2 },
@@ -82,9 +83,15 @@ namespace Scrabble
             if(turn == 1)
             {
                 isMyTurn = true;
+                player1Panel.BackColor = Color.YellowGreen;
+                player2Panel.BackColor = Color.White;
+
             }
             else
             {
+                player1Panel.BackColor = Color.White;
+                player2Panel.BackColor = Color.YellowGreen;
+
                 isMyTurn = false;
                 btnSubmit.Enabled = false;
             }
@@ -284,7 +291,7 @@ namespace Scrabble
             panel1.Controls.Add(btnReset);
 
             // Panel For Player 1
-            Panel player1Panel = new Panel();
+            player1Panel = new Panel();
             player1Panel.BorderStyle = BorderStyle.FixedSingle;
             player1Panel.Left = 680;
             player1Panel.Top = 40;
@@ -307,12 +314,12 @@ namespace Scrabble
             player1Image.Height = 80;
             player1Image.Width = 100;
             player1Image.SizeMode = PictureBoxSizeMode.StretchImage;
-            player1Image.Image = Image.FromFile("D:\\BSCS\\Semester 6\\Parallel Distributing Computing\\Labs\\Sir Umer\\Scrabbleproject\\player1.jpg");  // Replace "path_to_your_image.jpg" with the actual path to your image file
+            player1Image.Image = Image.FromFile("player1.jpg");  // Replace "path_to_your_image.jpg" with the actual path to your image file
             player1Panel.Controls.Add(player1Image);
 
             // Panel For Player 2
 
-            Panel player2Panel = new Panel();
+            player2Panel = new Panel();
             player2Panel.BorderStyle = BorderStyle.FixedSingle;
             player2Panel.Left = 680;
             player2Panel.Top = 220;
@@ -336,7 +343,7 @@ namespace Scrabble
             player2Image.Height = 80;
             player2Image.Width = 100;
             player2Image.SizeMode = PictureBoxSizeMode.StretchImage;
-            player2Image.Image = Image.FromFile("D:\\BSCS\\Semester 6\\Parallel Distributing Computing\\Labs\\Sir Umer\\Scrabbleproject\\player2.jpg");  // Replace "path_to_your_image.jpg" with the actual path to your image file
+            player2Image.Image = Image.FromFile("player2.jpg");  // Replace "path_to_your_image.jpg" with the actual path to your image file
             player2Panel.Controls.Add(player2Image);
 
             player2Score.Text = "00";
