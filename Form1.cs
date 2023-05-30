@@ -19,6 +19,7 @@ namespace Scrabble
         HashSet<string> dictionary = new HashSet<string>();
         TcpClient tcpClient;
         String myName, opponentName;
+        bool isMyTurn = false;
         // Load the word list from the file
         string[] lines = File.ReadAllLines("dictionary.txt");
 
@@ -34,6 +35,7 @@ namespace Scrabble
         Color TLColor = ColorTranslator.FromHtml("#0f38bd");
         Color TWColor = ColorTranslator.FromHtml("#eb0551");
         Color TilesColor = ColorTranslator.FromHtml("#f0e054");
+        Button btnSubmit;
         private Button draggedButton; // Stores the button being dragged
         private Button targetButton; 
         private Dictionary<char, int> letterPoints = new Dictionary<char, int>()
@@ -65,8 +67,8 @@ namespace Scrabble
         {
             this.WindowState = FormWindowState.Minimized;
             SetNames();
-
             LoadGameUI();
+            AssignTurn();
 
             foreach (string word in lines)
             {
@@ -74,11 +76,26 @@ namespace Scrabble
             }
         }
 
+        private void AssignTurn()
+        {
+            int turn =(int)formatter.Deserialize(stream);
+            if(turn == 1)
+            {
+                isMyTurn = true;
+            }
+            else
+            {
+                isMyTurn = false;
+                btnSubmit.Enabled = false;
+            }
+        }
+
+
+
         private void SetNames()
         {
             formatter.Serialize(stream, myName);
             opponentName = (string)formatter.Deserialize(stream);
-
         }
 
         private void LoadGameUI()
@@ -234,7 +251,7 @@ namespace Scrabble
                 button.Font = new Font(button.Font, FontStyle.Bold);
                 panel1.Controls.Add(button);
             }
-            Button btnSubmit = new Button();
+            btnSubmit = new Button();
             btnSubmit.Top = 635;
             btnSubmit.Width = 110;
             btnSubmit.Height = 37;
