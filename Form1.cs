@@ -5,6 +5,8 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +17,8 @@ namespace Scrabble
     public partial class Form1 : Form
     {
         HashSet<string> dictionary = new HashSet<string>();
-
+        TcpClient tcpClient;
+        String myName, opponentName;
         // Load the word list from the file
         string[] lines = File.ReadAllLines("dictionary.txt");
 
@@ -24,7 +27,7 @@ namespace Scrabble
         private List<char> userTiles = new List<char>(); 
         private Button[,] board = new Button[15, 15];   // 15x15 game board
         private Button[,] userTilesBoard = new Button[1, 7];  // 7 tiles available to user
-        private const int ButtonSize = 37;
+        private const int ButtonSize = 37;                  
         private const int ButtonSpacing = 4;
         Color DLColor = ColorTranslator.FromHtml("#03befc");
         Color DWColor = ColorTranslator.FromHtml("#fc8e2d");
@@ -44,21 +47,38 @@ namespace Scrabble
         Label player1Score = new Label();
         Random random = new Random();
         char[] availableTiles = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M' };
-        int Score;
+        int myScore,opponentScore;
+        BinaryFormatter formatter;
+        NetworkStream stream;
 
-        public Form1()
+        public Form1(TcpClient client, string name)
         {
+            tcpClient = client;
+            stream = tcpClient.GetStream();
+            formatter = new BinaryFormatter();
+            myName = name;
             InitializeComponent();
+            CheckForIllegalCrossThreadCalls = false;
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
+            SetNames();
+
             LoadGameUI();
+
             foreach (string word in lines)
             {
                 dictionary.Add(word.ToLower());
             }
+        }
+
+        private void SetNames()
+        {
+            formatter.Serialize(stream, myName);
+            opponentName = (string)formatter.Deserialize(stream);
+
         }
 
         private void LoadGameUI()
@@ -256,7 +276,7 @@ namespace Scrabble
             panel1.Controls.Add(player1Panel);
 
             Label player1 = new Label();
-            player1.Text = "Abdullah";
+            player1.Text = myName;
             player1.Font = new Font(btnReset.Font, FontStyle.Bold);
             player1Panel.Controls.Add(player1);
 
@@ -285,7 +305,7 @@ namespace Scrabble
 
 
             Label player2 = new Label();
-            player2.Text = "Usama";
+            player2.Text = opponentName;
             player2.Font = new Font(btnReset.Font, FontStyle.Bold);
             player2Panel.Controls.Add(player2);
 
@@ -336,22 +356,25 @@ namespace Scrabble
 
         private void TargetButton_DragDrop(object sender, DragEventArgs e)
         {
-            if (int.Parse(targetButton.Tag.ToString()) == 0) { 
-                Button button = (Button)sender;
-                String[] splitted = targetButton.Name.Split(',');
-                boardHistory.Add(new BoardBackup()
-                {
-                    row = int.Parse(splitted[0]),
-                    col = int.Parse(splitted[1]),
-                    text = targetButton.Text,
-                    color = targetButton.BackColor
-                });
-                string buttonText = (string)e.Data.GetData(DataFormats.Text);
-                button.Text = buttonText;
-                button.ForeColor = Color.Black;
-                button.BackColor = TilesColor;
+            if (int.Parse(targetButton.Tag.ToString()) == 0) {
+                if (!(targetButton.Text != "DW" && targetButton.Text != "DL" && targetButton.Text != "TL" && targetButton.Text != "TW" && targetButton.Text != "★" && targetButton.Text!=""))
+                { 
+                    Button button = (Button)sender;
+                    String[] splitted = targetButton.Name.Split(',');
+                    boardHistory.Add(new BoardBackup()
+                    {
+                        row = int.Parse(splitted[0]),
+                        col = int.Parse(splitted[1]),
+                        text = targetButton.Text,
+                        color = targetButton.BackColor
+                    });
+                    string buttonText = (string)e.Data.GetData(DataFormats.Text);
+                    button.Text = buttonText;
+                    button.ForeColor = Color.Black;
+                    button.BackColor = TilesColor;
 
-                RemoveButtonFromLayout(draggedButton);
+                    RemoveButtonFromLayout(draggedButton);
+                }
             }
         }
         private void RemoveButtonFromLayout(Button button)
@@ -405,11 +428,10 @@ namespace Scrabble
                 string word = GetWordFromBoard();
                 if (IsWordValid(word))
                 {
-
-                    Score += CalculateWordWeight(word);
+                    myScore += CalculateWordWeight(word);
                     MessageBox.Show("Valid word!");
                 
-                    player2Score.Text = Score.ToString();
+                    player2Score.Text = myScore.ToString();
                     foreach(var i in boardHistory)
                     {
 
