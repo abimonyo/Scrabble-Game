@@ -10,7 +10,7 @@ namespace Scrabble
     {
         public int rowIndex { get; set; }
         public int columnIndex { get; set; }
-        public String letter { get; set; }
+        public char letter { get; set; }
         public int weight { get; set; }
     }
 }
