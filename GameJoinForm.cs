@@ -36,15 +36,11 @@ namespace Scrabble
                 Form1 form = new Form1(client, name);
                 form.Show();
                 this.Hide();
-
             }
             else
             {
                 MessageBox.Show("Please Provide all the Credentials!");
             }
-           
-
-
         }
     }
 }
