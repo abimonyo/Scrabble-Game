@@ -25,11 +25,12 @@ namespace Scrabble
         string[] lines = File.ReadAllLines("dictionary.txt");
 
         List<MoveHistory> moveHistories = new List<MoveHistory>();  // Saves the tiles moved by user to board
+        List<MoveHistory> sendMoveHistory = new List<MoveHistory>();  // Saves the tiles moved by user to board
         List<BoardBackup> boardHistory = new List<BoardBackup>(); // Backup for the board tile which is occupied.
-        private List<Letter> userTiles = new List<Letter>(); 
+        private List<Letter> userTiles = new List<Letter>();
         private Button[,] board = new Button[15, 15];   // 15x15 game board
         private Button[,] userTilesBoard = new Button[1, 7];  // 7 tiles available to user
-        private const int ButtonSize = 37;                  
+        private const int ButtonSize = 37;
         private const int ButtonSpacing = 4;
         Color DLColor = ColorTranslator.FromHtml("#03befc");
         Color DWColor = ColorTranslator.FromHtml("#fc8e2d");
@@ -37,15 +38,15 @@ namespace Scrabble
         Color TWColor = ColorTranslator.FromHtml("#eb0551");
         Color TilesColor = ColorTranslator.FromHtml("#f0e054");
         Button btnSubmit, draggedButton, targetButton, btnReset;
-        Panel player1Panel,player2Panel;
+        Panel player1Panel, player2Panel;
 
         private Dictionary<char, int> letterPoints = new Dictionary<char, int>();
-     
+
         Label player2Score = new Label();
         Label player1Score = new Label();
         Random random = new Random();
         char[] availableTiles = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M' };
-        int myScore,opponentScore;
+        int myScore, opponentScore;
         BinaryFormatter formatter;
         NetworkStream stream;
 
@@ -66,34 +67,67 @@ namespace Scrabble
             PlayerGUI();
             AssignTurn();
             LoadGameUI();
-            
+
             foreach (string word in lines)
             {
                 dictionary.Add(word.ToLower());
             }
         }
+        private void listenOpponent()
+        {
+            while (true)
+            {
+                if (isMyTurn)
+                {
+                    player1Panel.BackColor = Color.YellowGreen;
+                    player2Panel.BackColor = Color.White;
+                    btnSubmit.Enabled = true;
+                }
+                else
+                {
+                    btnSubmit.Enabled = false;
+                    player1Panel.BackColor = Color.White;
+                    player2Panel.BackColor = Color.YellowGreen;
+                    string jsonString = (string)formatter.Deserialize(stream);
+                    moveHistories = JsonConvert.DeserializeObject<List<MoveHistory>>(jsonString);
+                    updateUI();
+                    moveHistories.Clear();
+                }
+            }
+        }
+
+        private void updateUI()
+        {
+            foreach (var i in moveHistories)
+            {
+                board[i.rowIndex, i.columnIndex].Text = i.letter.ToString();
+                board[i.rowIndex, i.columnIndex].Tag = 1;
+                board[i.rowIndex, i.columnIndex].ForeColor = Color.Black;
+                board[i.rowIndex, i.columnIndex].BackColor = TilesColor;
+            }
+            isMyTurn = true;
+        }
 
         private void AssignTurn()
         {
-            int turn =(int)formatter.Deserialize(stream);
-            if(turn == 1)
+
+            int turn = (int)formatter.Deserialize(stream);
+            if (turn == 1)
             {
-                isMyTurn = true;
+                isMyTurn = false;
+
                 player1Panel.BackColor = Color.YellowGreen;
                 player2Panel.BackColor = Color.White;
             }
             else
             {
-                player1Panel.BackColor = Color.White;
-                player2Panel.BackColor = Color.YellowGreen;
 
-                isMyTurn = false;
-                btnSubmit.Enabled = false;
+                Thread t1 = new Thread(listenOpponent);
+                t1.Start();
+                t1.IsBackground = true;
             }
             string jsonString = (string)formatter.Deserialize(stream);
             userTiles = JsonConvert.DeserializeObject<List<Letter>>(jsonString);
-
-
         }
 
 
@@ -232,10 +266,10 @@ namespace Scrabble
             //UserTiles Board
             for (int i = 0; i < 7; i++)
             {
-               
-              /*  availableTiles[index] = availableTiles[availableTiles.Length - 1];
-                Array.Resize(ref availableTiles, availableTiles.Length - 1);
-*/
+
+                /*  availableTiles[index] = availableTiles[availableTiles.Length - 1];
+                  Array.Resize(ref availableTiles, availableTiles.Length - 1);
+  */
 
                 Button button = new Button();
                 button.Top = 635;
@@ -255,13 +289,13 @@ namespace Scrabble
                 button.Font = new Font(button.Font, FontStyle.Bold);
                 panel1.Controls.Add(button);
             }
-           
 
-           
+
+
         }
         private void PlayerGUI()
         {
-             btnSubmit = new Button();
+            btnSubmit = new Button();
             btnSubmit.Top = 635;
             btnSubmit.Width = 110;
             btnSubmit.Height = 37;
@@ -303,7 +337,7 @@ namespace Scrabble
 
             Label player1 = new Label();
             player1.Text = myName;
-            player1.Font = new Font(player1.Font.FontFamily,15, FontStyle.Bold);
+            player1.Font = new Font(player1.Font.FontFamily, 15, FontStyle.Bold);
             player1Panel.Controls.Add(player1);
 
             player1Score.Text = "0";
@@ -364,9 +398,12 @@ namespace Scrabble
                 moveHistories.Add(new MoveHistory()
                 {
                     rowIndex = 0,
-                    columnIndex = int.Parse(draggedButton.Name),
+                    columnIndex = int.Parse(draggedButton.Name.ToString()),
                     letter = char.Parse(draggedButton.Text)
+
                 });
+
+
                 draggedButton.DoDragDrop(draggedButton.Text, DragDropEffects.Copy);
             }
         }
@@ -382,9 +419,10 @@ namespace Scrabble
 
         private void TargetButton_DragDrop(object sender, DragEventArgs e)
         {
-            if (int.Parse(targetButton.Tag.ToString()) == 0) {
-                if (!(targetButton.Text != "DW" && targetButton.Text != "DL" && targetButton.Text != "TL" && targetButton.Text != "TW" && targetButton.Text != "★" && targetButton.Text!=""))
-                { 
+            if (int.Parse(targetButton.Tag.ToString()) == 0)
+            {
+                if (!(targetButton.Text != "DW" && targetButton.Text != "DL" && targetButton.Text != "TL" && targetButton.Text != "TW" && targetButton.Text != "★" && targetButton.Text != ""))
+                {
                     Button button = (Button)sender;
                     String[] splitted = targetButton.Name.Split(',');
                     boardHistory.Add(new BoardBackup()
@@ -398,8 +436,13 @@ namespace Scrabble
                     button.Text = buttonText;
                     button.ForeColor = Color.Black;
                     button.BackColor = TilesColor;
-
                     RemoveButtonFromLayout(draggedButton);
+                    sendMoveHistory.Add(new MoveHistory()
+                    {
+                        rowIndex = int.Parse(splitted[0]),
+                        columnIndex = int.Parse(splitted[1]),
+                        letter = char.Parse(draggedButton.Text)
+                    });
                 }
             }
         }
@@ -415,7 +458,6 @@ namespace Scrabble
                 board[i.row, i.col].BackColor = i.color;
                 board[i.row, i.col].ForeColor = Color.White;
                 board[i.row, i.col].Show();
-
             }
             foreach (var move in moveHistories)
             {
@@ -423,6 +465,7 @@ namespace Scrabble
             }
             boardHistory.Clear();
             moveHistories.Clear();
+            sendMoveHistory.Clear();
         }
         bool IsWordValid(string word)
         {
@@ -439,7 +482,7 @@ namespace Scrabble
                     if (!string.IsNullOrEmpty(board[row, col].Text))
                     {
                         if (board[row, col].Text != "DW" && board[row, col].Text != "DL" && board[row, col].Text != "TL" && board[row, col].Text != "TW" && board[row, col].Text != "★")
-                            if(int.Parse(board[row, col].Tag.ToString())==0)
+                            if (int.Parse(board[row, col].Tag.ToString()) == 0)
                                 sb.Append(board[row, col].Text);
                     }
                 }
@@ -449,31 +492,28 @@ namespace Scrabble
         private void btnSubmit_Click(object sender, EventArgs e)
         {
 
-            bool flag=isGameBeginWithStar();
+            bool flag = isGameBeginWithStar();
             if (flag)
-            { 
+            {
                 string word = GetWordFromBoard();
                 if (IsWordValid(word))
                 {
                     myScore += CalculateWordWeight(word);
                     MessageBox.Show("Valid word!");
-                
+
                     player2Score.Text = myScore.ToString();
-                    foreach(var i in boardHistory)
+                    foreach (var i in boardHistory)
                     {
                         board[i.row, i.col].Tag = 1;
                     }
-                    string json = JsonConvert.SerializeObject(moveHistories);
+                    string json = JsonConvert.SerializeObject(sendMoveHistory);
                     formatter.Serialize(stream, json);
                     json = (string)formatter.Deserialize(stream);
                     List<Letter> letter;
                     letter = JsonConvert.DeserializeObject<List<Letter>>(json);
-                    foreach(var i in letter)
-                    {
-                        userTiles.Add(i);
-                    }
-                    
-                    RefillUserTiles();
+                    sendMoveHistory.Clear();
+                    RefillUserTiles(letter);
+                    isMyTurn = false;
                     boardHistory.Clear();
                     moveHistories.Clear();
                 }
@@ -482,7 +522,7 @@ namespace Scrabble
                     MessageBox.Show("Invalid word!");
                 }
             }
-            else 
+            else
             {
                 MessageBox.Show("First Word Must Start with Star");
 
@@ -499,11 +539,11 @@ namespace Scrabble
                 return true;
         }
 
-        private void RefillUserTiles()
+        private void RefillUserTiles(List<Letter> letter)
         {
-            foreach(var i in moveHistories)
+            foreach (var i in moveHistories)
             {
-               for(int j=0;j<=userTiles.Count;j++)
+                for (int j = 0; j < userTiles.Count; j++)
                 {
                     if (userTiles[j].Name == i.letter)
                     {
@@ -511,15 +551,19 @@ namespace Scrabble
                     }
                 }
             }
-           /* for(int i = 0; i <= 7-userTiles.Count; i++)
+            foreach (var i in letter)
             {
-                userTiles.Add(availableTiles[random.Next(availableTiles.Length)]);
-            }*/
-            foreach(var i in moveHistories)
+                userTiles.Add(i);
+            }
+            /* for(int i = 0; i <= 7-userTiles.Count; i++)
+             {
+                 userTiles.Add(availableTiles[random.Next(availableTiles.Length)]);
+             }*/
+            foreach (var i in moveHistories)
             {
-                foreach(var j in userTiles)
+                foreach (var j in userTiles)
                 {
-                    userTilesBoard[0, i.columnIndex].Text=j.ToString();
+                    userTilesBoard[0, i.columnIndex].Text = j.Name.ToString();
                     userTilesBoard[0, i.columnIndex].Show();
 
                 }
@@ -531,10 +575,10 @@ namespace Scrabble
             int wordWeight = 0;
             foreach (char letter in word)
             {
-                foreach(var scr in userTiles)
+                foreach (var scr in userTiles)
                 {
-                    if (letter == scr.Name) 
-                        wordWeight+=scr.Weight;
+                    if (letter == scr.Name)
+                        wordWeight += scr.Weight;
                 }
             }
             //formatter.Serialize(stream,wordWeight);
