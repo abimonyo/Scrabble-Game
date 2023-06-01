@@ -75,13 +75,12 @@ namespace Scrabble
         }
         private void listenOpponent()
         {
-            while (true)
-            {
+           
                 if (isMyTurn)
                 {
                     player1Panel.BackColor = Color.YellowGreen;
                     player2Panel.BackColor = Color.White;
-                    btnSubmit.Enabled = true;
+                    return;
                 }
                 else
                 {
@@ -91,8 +90,9 @@ namespace Scrabble
                     string jsonString = (string)formatter.Deserialize(stream);
                     moveHistories = JsonConvert.DeserializeObject<List<MoveHistory>>(jsonString);
                     updateUI();
-                    moveHistories.Clear();
-                }
+                btnSubmit.Enabled = true;
+    
+                moveHistories.Clear();
             }
         }
 
@@ -115,7 +115,6 @@ namespace Scrabble
             if (turn == 1)
             {
                 isMyTurn = false;
-
                 player1Panel.BackColor = Color.YellowGreen;
                 player2Panel.BackColor = Color.White;
             }
@@ -395,15 +394,6 @@ namespace Scrabble
             if (e.Button == MouseButtons.Left)
             {
                 draggedButton = (Button)sender;
-                moveHistories.Add(new MoveHistory()
-                {
-                    rowIndex = 0,
-                    columnIndex = int.Parse(draggedButton.Name.ToString()),
-                    letter = char.Parse(draggedButton.Text)
-
-                });
-
-
                 draggedButton.DoDragDrop(draggedButton.Text, DragDropEffects.Copy);
             }
         }
@@ -425,6 +415,14 @@ namespace Scrabble
                 {
                     Button button = (Button)sender;
                     String[] splitted = targetButton.Name.Split(',');
+                    moveHistories.Add(new MoveHistory()
+                    {
+                        rowIndex = 0,
+                        columnIndex = int.Parse(draggedButton.Name.ToString()),
+                        letter = char.Parse(draggedButton.Text)
+
+                    });
+
                     boardHistory.Add(new BoardBackup()
                     {
                         row = int.Parse(splitted[0]),
@@ -513,9 +511,15 @@ namespace Scrabble
                     letter = JsonConvert.DeserializeObject<List<Letter>>(json);
                     sendMoveHistory.Clear();
                     RefillUserTiles(letter);
-                    isMyTurn = false;
+                    letter.Clear();
                     boardHistory.Clear();
                     moveHistories.Clear();
+                    //btnSubmit.Enabled = false;
+                    isMyTurn = false;
+                    
+                    Thread t2 = new Thread(listenOpponent);
+                    t2.IsBackground = true;
+                    t2.Start();
                 }
                 else
                 {
@@ -559,7 +563,7 @@ namespace Scrabble
              {
                  userTiles.Add(availableTiles[random.Next(availableTiles.Length)]);
              }*/
-            foreach (var i in moveHistories)
+            /*foreach (var i in moveHistories)
             {
                 foreach (var j in userTiles)
                 {
@@ -567,7 +571,13 @@ namespace Scrabble
                     userTilesBoard[0, i.columnIndex].Show();
 
                 }
+            }*/
+            for(int i = 0; i < 7; i++)
+            {
+                userTilesBoard[0, i].Text = userTiles[i].Name.ToString();
+                userTilesBoard[0, i].Show();
             }
+            
         }
 
         private int CalculateWordWeight(string word)
