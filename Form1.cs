@@ -78,8 +78,6 @@ namespace Scrabble
            
                 if (isMyTurn)
                 {
-                    player1Panel.BackColor = Color.YellowGreen;
-                    player2Panel.BackColor = Color.White;
                     return;
                 }
                 else
@@ -90,10 +88,11 @@ namespace Scrabble
                     string jsonString = (string)formatter.Deserialize(stream);
                     moveHistories = JsonConvert.DeserializeObject<List<MoveHistory>>(jsonString);
                     updateUI();
-                btnSubmit.Enabled = true;
-    
-                moveHistories.Clear();
-            }
+                    player1Panel.BackColor = Color.YellowGreen;
+                    player2Panel.BackColor = Color.White;
+                    btnSubmit.Enabled = true;
+                    moveHistories.Clear();
+                }
         }
 
         private void updateUI()
